@@ -1,0 +1,718 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080b16">
+<title>GLOBAL APK HUB</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #080b16;
+  --panel: #11182b;
+  --cyan: #00eaff;
+  --purple: #a855f7;
+  --pink: #ff36c7;
+  --text: #ffffff;
+  --muted: #9ca9c5;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background:
+    radial-gradient(circle at top left,#25134c,transparent 35%),
+    radial-gradient(circle at top right,#07334c,transparent 30%),
+    var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+button,input {
+  font-family: inherit;
+}
+
+header {
+  height: 75px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6%;
+  background: rgba(8,11,22,.9);
+  border-bottom: 1px solid #26314c;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(15px);
+}
+
+.logo {
+  font-size: 19px;
+  font-weight: 900;
+  color: var(--cyan);
+  letter-spacing: 1px;
+  text-shadow: 0 0 15px var(--cyan);
+}
+
+.logo span {
+  color: white;
+}
+
+.online {
+  color: #39ff9c;
+  font-size: 12px;
+}
+
+.hero {
+  text-align: center;
+  padding: 90px 20px 55px;
+}
+
+.hero h1 {
+  font-size: clamp(35px,7vw,70px);
+  font-weight: 900;
+  line-height: 1.15;
+  background: linear-gradient(90deg,#00eaff,#a855f7,#ff36c7);
+  -webkit-background-clip: text;
+  color: transparent;
+  margin: 20px 0;
+}
+
+.hero p {
+  color: var(--muted);
+  line-height: 1.8;
+  max-width: 600px;
+  margin: auto;
+}
+
+.hero-label {
+  display: inline-block;
+  padding: 9px 18px;
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  border-radius: 30px;
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+
+.search {
+  max-width: 650px;
+  margin: 30px auto;
+}
+
+.search input {
+  width: 100%;
+  padding: 18px 22px;
+  border-radius: 15px;
+  border: 1px solid #354363;
+  background: #11182b;
+  color: white;
+  outline: none;
+  font-size: 15px;
+}
+
+.search input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 18px #00eaff35;
+}
+
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-top: 25px;
+}
+
+.stat {
+  background: #11182b;
+  border: 1px solid #293652;
+  border-radius: 14px;
+  padding: 15px 25px;
+  min-width: 120px;
+}
+
+.stat h2 {
+  color: var(--cyan);
+  font-size: 22px;
+}
+
+.stat p {
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: auto;
+  padding-bottom: 60px;
+}
+
+.section-title {
+  font-size: 27px;
+  margin: 30px 0 20px;
+}
+
+.categories {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 5px 0 18px;
+}
+
+.category {
+  white-space: nowrap;
+  padding: 11px 20px;
+  border-radius: 30px;
+  border: 1px solid #354363;
+  background: #11182b;
+  color: #aab5cc;
+  cursor: pointer;
+}
+
+.category.active,
+.category:hover {
+  background: linear-gradient(90deg,var(--cyan),var(--purple));
+  color: #080b16;
+  border-color: transparent;
+  font-weight: bold;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 20px;
+}
+
+.card {
+  background: linear-gradient(145deg,#151e35,#0c1221);
+  border: 1px solid #293652;
+  border-radius: 20px;
+  padding: 20px;
+  transition: .3s;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  border-color: var(--cyan);
+  box-shadow: 0 0 25px #00eaff20;
+}
+
+.app-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.app-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: linear-gradient(135deg,#00eaff,#7046ff);
+  display: grid;
+  place-items: center;
+  font-size: 27px;
+  flex-shrink: 0;
+}
+
+.app-name {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.app-category {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.description {
+  color: #aeb9d0;
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 18px 0;
+  min-height: 44px;
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: #8998b5;
+  font-size: 11px;
+  border-top: 1px solid #293652;
+  padding-top: 14px;
+  flex-wrap: wrap;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.download,
+.details {
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.download {
+  flex: 1;
+  background: linear-gradient(90deg,var(--cyan),#9c7aff);
+  color: #080b16;
+}
+
+.details {
+  background: #25324d;
+  color: white;
+}
+
+.download:hover,
+.details:hover {
+  filter: brightness(1.2);
+}
+
+.empty {
+  grid-column: 1/-1;
+  text-align: center;
+  color: var(--muted);
+  padding: 40px;
+  border: 1px dashed #354363;
+  border-radius: 15px;
+}
+
+.warning {
+  margin-top: 45px;
+  background: #201a15;
+  border: 1px solid #76542b;
+  border-radius: 15px;
+  padding: 20px;
+  color: #ffd79a;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+footer {
+  text-align: center;
+  border-top: 1px solid #293652;
+  padding: 30px 15px;
+  color: #8998b5;
+  font-size: 12px;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #000b;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.modal.show {
+  display: flex;
+}
+
+.modal-content {
+  background: #11182b;
+  border: 1px solid var(--cyan);
+  border-radius: 20px;
+  padding: 25px;
+  width: 100%;
+  max-width: 430px;
+}
+
+.modal-content h2 {
+  color: var(--cyan);
+  margin-bottom: 15px;
+}
+
+.modal-content p {
+  color: var(--muted);
+  line-height: 1.8;
+  font-size: 13px;
+  margin: 12px 0;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.close {
+  background: #354363;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+}
+
+@media(max-width:900px) {
+  .grid {
+    grid-template-columns: repeat(2,1fr);
+  }
+}
+
+@media(max-width:600px) {
+  header {
+    padding: 0 5%;
+  }
+  .logo {
+    font-size: 15px;
+  }
+  .hero {
+    padding-top: 65px;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .container {
+    width: 92%;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">⬡ GLOBAL <span>APK HUB</span></div>
+  <div class="online">● GLOBAL ONLINE</div>
+</header>
+
+<section class="hero">
+  <div class="hero-label">ANDROID DOWNLOAD CENTER</div>
+
+  <h1>DOWNLOAD<br>WITHOUT LIMITS.</h1>
+
+  <p>
+    Welcome to GLOBAL APK HUB.
+    ค้นหาแอปพลิเคชัน Android
+    และดาวน์โหลดได้จากทั่วโลก
+  </p>
+
+  <div class="search">
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="ค้นหา APK ที่คุณต้องการ..."
+    >
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <h2 id="appCount">0</h2>
+      <p>AVAILABLE APPS</p>
+    </div>
+
+    <div class="stat">
+      <h2>24/7</h2>
+      <p>GLOBAL ACCESS</p>
+    </div>
+
+    <div class="stat">
+      <h2>ANDROID</h2>
+      <p>PLATFORM</p>
+    </div>
+  </div>
+</section>
+
+<main class="container">
+
+  <h2 class="section-title">
+    EXPLORE LIBRARY <span style="color:#00eaff">.</span>
+  </h2>
+
+  <div class="categories" id="categories">
+    <button class="category active" data-category="ทั้งหมด">ทั้งหมด</button>
+    <button class="category" data-category="เกม">เกม</button>
+    <button class="category" data-category="เครื่องมือ">เครื่องมือ</button>
+    <button class="category" data-category="โซเชียล">โซเชียล</button>
+    <button class="category" data-category="อื่นๆ">อื่นๆ</button>
+  </div>
+
+  <div class="grid" id="appGrid"></div>
+
+  <div class="warning">
+    ⚠ <b>คำเตือนความปลอดภัย</b><br>
+    ดาวน์โหลดและติดตั้ง APK จากแหล่งที่เชื่อถือได้เท่านั้น
+    ตรวจสอบไฟล์ก่อนติดตั้ง และเผยแพร่เฉพาะไฟล์ที่คุณมีสิทธิ์แจกจ่าย
+  </div>
+
+</main>
+
+<footer>
+  © <span id="year"></span> GLOBAL APK HUB<br><br>
+  POWERED BY CYBER TECHNOLOGY
+</footer>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <h2 id="modalTitle">APP DETAILS</h2>
+    <p id="modalDescription"></p>
+    <p id="modalVersion"></p>
+    <p id="modalSize"></p>
+    <div class="modal-buttons">
+      <button class="download" id="modalDownload">DOWNLOAD APK</button>
+      <button class="close" onclick="closeModal()">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+/* =====================================
+   GLOBAL APK HUB DATABASE
+   เพิ่ม APK ใหม่ได้ตรงนี้
+===================================== */
+
+const APPS = [
+
+  {
+    id: 1,
+    name: "Example Game",
+    category: "เกม",
+    icon: "🎮",
+    description: "ตัวอย่างเกม Android เปลี่ยนข้อมูลและลิงก์เป็นไฟล์จริงของคุณ",
+    version: "1.0.0",
+    size: "85 MB",
+    downloadUrl: "",
+    updated: "2026-11-07"
+  },
+
+  {
+    id: 2,
+    name: "Example Tool",
+    category: "เครื่องมือ",
+    icon: "⚡",
+    description: "ตัวอย่างแอปเครื่องมือสำหรับ Android",
+    version: "2.0.0",
+    size: "25 MB",
+    downloadUrl: "",
+    updated: "2026-11-07"
+  },
+
+  {
+    id: 3,
+    name: "Example Social",
+    category: "โซเชียล",
+    icon: "💬",
+    description: "ตัวอย่างแอปโซเชียลมีเดีย",
+    version: "1.5.0",
+    size: "40 MB",
+    downloadUrl: "",
+    updated: "2026-11-07"
+  }
+
+];
+
+/* =====================================
+   SYSTEM
+===================================== */
+
+let activeCategory = "ทั้งหมด";
+
+const appGrid = document.getElementById("appGrid");
+const searchInput = document.getElementById("searchInput");
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, c => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  })[c]);
+}
+
+function renderApps() {
+
+  const search = searchInput.value.toLowerCase().trim();
+
+  const filtered = APPS.filter(app => {
+
+    const matchCategory =
+      activeCategory === "ทั้งหมด" ||
+      app.category === activeCategory;
+
+    const text =
+      (app.name + " " +
+       app.category + " " +
+       app.description).toLowerCase();
+
+    return matchCategory && text.includes(search);
+
+  });
+
+  document.getElementById("appCount").textContent = APPS.length;
+
+  if (filtered.length === 0) {
+    appGrid.innerHTML =
+      '<div class="empty">ไม่พบ APK ที่คุณค้นหา</div>';
+    return;
+  }
+
+  appGrid.innerHTML = filtered.map(app => `
+
+    <div class="card">
+
+      <div class="app-head">
+
+        <div class="app-icon">
+          ${escapeHTML(app.icon)}
+        </div>
+
+        <div>
+          <div class="app-name">
+            ${escapeHTML(app.name)}
+          </div>
+
+          <div class="app-category">
+            ${escapeHTML(app.category)}
+          </div>
+        </div>
+
+      </div>
+
+      <div class="description">
+        ${escapeHTML(app.description)}
+      </div>
+
+      <div class="meta">
+        <span>Version: ${escapeHTML(app.version)}</span>
+        <span>${escapeHTML(app.size)}</span>
+      </div>
+
+      <div class="actions">
+
+        <button class="download"
+          onclick="downloadApp(${app.id})">
+          ↓ DOWNLOAD
+        </button>
+
+        <button class="details"
+          onclick="showDetails(${app.id})">
+          DETAILS
+        </button>
+
+      </div>
+
+    </div>
+
+  `).join("");
+
+}
+
+/* DOWNLOAD */
+
+function downloadApp(id) {
+
+  const app = APPS.find(item => item.id === id);
+
+  if (!app || !app.downloadUrl) {
+    alert("APK นี้ยังไม่มีลิงก์ดาวน์โหลด");
+    return;
+  }
+
+  try {
+    const url = new URL(app.downloadUrl);
+
+    if (url.protocol !== "https:") {
+      alert("กรุณาใช้ลิงก์ดาวน์โหลด HTTPS");
+      return;
+    }
+
+    window.open(url.href, "_blank", "noopener,noreferrer");
+
+  } catch {
+    alert("ลิงก์ดาวน์โหลดไม่ถูกต้อง");
+  }
+
+}
+
+/* DETAILS */
+
+function showDetails(id) {
+
+  const app = APPS.find(item => item.id === id);
+
+  if (!app) return;
+
+  document.getElementById("modalTitle").textContent =
+    app.name;
+
+  document.getElementById("modalDescription").textContent =
+    app.description;
+
+  document.getElementById("modalVersion").textContent =
+    "VERSION: " + app.version;
+
+  document.getElementById("modalSize").textContent =
+    "FILE SIZE: " + app.size;
+
+  const downloadButton =
+    document.getElementById("modalDownload");
+
+  downloadButton.onclick = () => downloadApp(id);
+
+  document.getElementById("modal").classList.add("show");
+
+}
+
+function closeModal() {
+  document.getElementById("modal").classList.remove("show");
+}
+
+document.getElementById("modal").addEventListener("click", event => {
+  if (event.target.id === "modal") closeModal();
+});
+
+/* SEARCH */
+
+searchInput.addEventListener("input", renderApps);
+
+/* CATEGORY */
+
+document.getElementById("categories").addEventListener("click", event => {
+
+  const button = event.target.closest("[data-category]");
+
+  if (!button) return;
+
+  activeCategory = button.dataset.category;
+
+  document.querySelectorAll(".category").forEach(item => {
+    item.classList.remove("active");
+  });
+
+  button.classList.add("active");
+
+  renderApps();
+
+});
+
+/* START */
+
+document.getElementById("year").textContent =
+  new Date().getFullYear();
+
+renderApps();
+
+</script>
+
+</body>
+</html>
