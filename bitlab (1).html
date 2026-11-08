@@ -1,0 +1,2462 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d17">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>BitLab - ZIP Auto Game Lab</title>
+
+<!-- ZIP Library -->
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+
+<style>
+:root {
+ --bg:#0b0d17;
+ --card:#141831;
+ --card2:#1b2142;
+ --tx:#eef0ff;
+ --mu:#9aa3d0;
+ --bd:#2a3263;
+ --a:#7c5cff;
+ --b:#22d3ee;
+ --gold:#fbbf24;
+ --ok:#34d399;
+ --bad:#fb7185;
+ box-sizing:border-box;
+ color-scheme:dark;
+}
+*{box-sizing:border-box}
+body {
+ margin:0;
+ min-height:100vh;
+ background:
+ radial-gradient(900px 500px at 10% -10%,rgba(124,92,255,.25),transparent),
+ radial-gradient(800px 500px at 100% 0,rgba(34,211,238,.15),transparent),
+ var(--bg);
+ color:var(--tx);
+ font:15px/1.5 system-ui,"Noto Sans Thai",sans-serif;
+}
+.w{max-width:1100px;margin:auto;padding:16px}
+h1 {
+ margin:0;
+ font-size:28px;
+ background:linear-gradient(90deg,var(--a),var(--b));
+ -webkit-background-clip:text;
+ color:transparent;
+}
+.sub{color:var(--mu);margin:3px 0 15px}
+.card {
+ background:var(--card);
+ border:1px solid var(--bd);
+ border-radius:16px;
+ padding:14px;
+ margin-bottom:14px;
+}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.tier {
+ background:var(--card2);
+ border:2px solid var(--bd);
+ border-radius:14px;
+ padding:12px;
+ cursor:pointer;
+}
+.tier.on{border-color:var(--a);box-shadow:0 0 0 3px #7c5cff33}
+.tier h3{margin:0 0 4px}
+.tier small{color:var(--mu)}
+.tag {
+ display:inline-block;
+ font-size:12px;
+ padding:2px 8px;
+ border-radius:20px;
+ background:var(--bd);
+ margin:3px;
+}
+.bar{height:8px;background:var(--bd);border-radius:10px;overflow:hidden}
+.bar i {
+ display:block;
+ height:100%;
+ width:0;
+ background:linear-gradient(90deg,var(--a),var(--b));
+ transition:width .2s;
+}
+textarea,input[type=email] {
+ width:100%;
+ background:var(--card2);
+ color:var(--tx);
+ border:1px solid var(--bd);
+ border-radius:12px;
+ padding:10px;
+}
+textarea {
+ min-height:220px;
+ resize:vertical;
+ font:13px monospace;
+}
+input[type=email]{flex:1;min-width:180px}
+button,.lbl {
+ display:inline-block;
+ background:linear-gradient(90deg,var(--a),#5b8cff);
+ color:white;
+ border:0;
+ border-radius:11px;
+ padding:10px 15px;
+ font-weight:600;
+ cursor:pointer;
+}
+button.g,.lbl.g {
+ background:var(--card2);
+ color:var(--tx);
+ border:1px solid var(--bd);
+}
+button:disabled{opacity:.5}
+.lbl{background:var(--card2);border:1px solid var(--bd)}
+.msg{font-size:13px;color:var(--mu)}
+.files div,.lib .it {
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:8px;
+ background:var(--card2);
+ border-radius:10px;
+ padding:7px;
+ margin-top:6px;
+ font-size:13px;
+}
+.files button,.lib button{padding:3px 10px}
+.cpu {
+ display:grid;
+ grid-template-columns:repeat(auto-fill,minmax(14px,1fr));
+ gap:3px;
+ margin-top:8px;
+}
+.cpu b{height:14px;background:var(--bd);border-radius:3px}
+.cpu b.on{background:var(--ok)}
+.stage {
+ display:flex;
+ flex-direction:column;
+ height:min(72vh,680px);
+ min-height:340px;
+ background:#000;
+ border:1px solid var(--bd);
+ border-radius:14px;
+ overflow:hidden;
+ position:relative;
+}
+.stage.fs {
+ position:fixed;
+ inset:0;
+ z-index:100;
+ height:auto;
+ border-radius:0;
+}
+.tb {
+ display:flex;
+ align-items:center;
+ gap:7px;
+ padding:7px;
+ background:var(--card);
+}
+.url {
+ flex:1;
+ min-width:0;
+ padding:6px 12px;
+ border-radius:20px;
+ background:var(--card2);
+ color:var(--mu);
+ overflow:hidden;
+ white-space:nowrap;
+ text-overflow:ellipsis;
+}
+.view{position:relative;flex:1;min-height:0}
+.view iframe {
+ position:absolute;
+ inset:0;
+ width:100%;
+ height:100%;
+ border:0;
+ background:white;
+}
+.hud {
+ position:absolute;
+ left:10px;
+ top:10px;
+ z-index:5;
+ background:#000a;
+ color:var(--ok);
+ padding:4px 9px;
+ border-radius:8px;
+ font:12px monospace;
+ pointer-events:none;
+}
+.ov {
+ display:none;
+ position:absolute;
+ inset:0;
+ z-index:10;
+ background:#080a19ed;
+ color:white;
+ align-items:center;
+ justify-content:center;
+ flex-direction:column;
+ gap:12px;
+}
+.ov.on{display:flex}
+.big{font-size:48px;font-weight:bold}
+.hist{max-height:120px;overflow:auto;font-size:13px;color:var(--mu)}
+.chk{display:flex;align-items:center;gap:8px;margin-top:10px}
+@media(max-width:600px){
+ .w{padding:10px}
+ .stage{min-height:300px}
+}
+
+/* ===== BitLab Pro ===== */
+input[type=text],input[type=search],select{background:var(--card2);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;font:inherit;min-width:0}
+input[type=search]{flex:1;min-width:140px}
+.sm{padding:6px 10px!important;font-size:13px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.chips{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.chip{padding:6px 12px!important;border-radius:20px!important;font-size:13px;font-weight:600}
+span.chip{background:var(--card2);border:1px solid var(--bd)}
+.net{color:var(--bad)}.net.on{color:var(--ok)}
+.pf{display:flex;gap:12px;align-items:center;margin-top:8px}
+.av{width:64px;height:64px;border-radius:50%;background:var(--card2);border:2px solid var(--a);display:flex;align-items:center;justify-content:center;font-size:34px;flex:none}
+.pfi{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.pfi input{width:100%}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:8px;margin-top:10px}
+.sb{background:var(--card2);border-radius:10px;padding:8px;text-align:center}
+.sb b{display:block;font-size:17px}.sb span{font-size:11px;color:var(--mu)}
+.em{width:38px;height:38px;border-radius:10px!important;font-size:20px;padding:0!important;background:var(--card2)!important;border:2px solid var(--bd)!important}
+.em.on{border-color:var(--a)!important}
+.sw{width:30px;height:30px;border-radius:50%!important;padding:0!important;border:3px solid transparent!important}
+.sw.on{border-color:#fff!important}
+.bdg{display:inline-flex;gap:4px;align-items:center;background:var(--card2);border:1px solid var(--bd);border-radius:20px;padding:4px 10px;margin:3px;font-size:12px}
+.bdg.off{opacity:.35;filter:grayscale(1)}
+.pj{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--card2);border-radius:12px;padding:8px;margin-top:8px}
+.pj .th{width:64px;height:44px;border-radius:8px;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none;font-size:22px}
+.pj .th img{width:100%;height:100%;object-fit:cover}
+.pi{flex:1;min-width:140px}.pi small{display:block;color:var(--mu);font-size:12px}
+.pa{display:flex;gap:4px;flex-wrap:wrap;width:100%}
+.pa button{padding:4px 9px}
+details.card summary{cursor:pointer;list-style:none}
+details.card[open] summary{margin-bottom:6px}
+#con{max-height:180px;overflow:auto;background:#05060d;border-radius:10px;padding:8px;font:12px/1.5 monospace;margin-top:8px}
+.l{white-space:pre-wrap;word-break:break-word}
+.l.warn{color:var(--gold)}.l.error{color:var(--bad)}.l.log,.l.info{color:var(--mu)}
+.errOnly .l:not(.error){display:none}
+.toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));z-index:300;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;width:min(92vw,420px)}
+.toast{background:var(--card2);border:1px solid var(--bd);padding:9px 14px;border-radius:12px;font-size:14px;box-shadow:0 6px 24px #0008;animation:tin .2s}
+.toast.ok{border-color:var(--ok)}.toast.bad{border-color:var(--bad)}.toast.out{opacity:0;transition:opacity .3s}
+@keyframes tin{from{transform:translateY(10px);opacity:0}}
+.pal{display:none;position:fixed;inset:0;z-index:250;background:#000a;align-items:flex-start;justify-content:center;padding-top:12vh}
+.pal.on{display:flex}
+.pbox{width:min(520px,92vw);background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:10px;max-height:70vh;overflow:auto}
+.pbox input{width:100%;margin-bottom:6px}
+.pit{display:flex;justify-content:space-between;gap:8px;padding:9px 10px;border-radius:9px;cursor:pointer}
+.pit.sel,.pit:hover{background:var(--card2)}
+.drop{display:none;position:fixed;inset:0;z-index:240;background:#7c5cff44;border:3px dashed var(--b);align-items:center;justify-content:center;font-size:22px;font-weight:700;pointer-events:none}
+.drop.on{display:flex}
+html.lite body{background:var(--bg)}
+html.lite *{transition:none!important;animation:none!important}
+@media(max-width:600px){input,select{font-size:16px}.tb button{padding:8px 9px}}
+</style>
+</head>
+
+<body>
+<div class="w">
+
+<div class="top">
+<div>
+<h1>🎮 BitLab</h1>
+<p class="sub">ห้องทดลองเกม 32 / 64 / 72 / 100 บิต พร้อม ZIP Auto Extract</p>
+</div>
+<div class="chips">
+<button class="g chip" id="chipLv" title="โปรไฟล์">👤 Guest</button>
+<button class="g chip" id="kbtn" title="คำสั่งด่วน (Ctrl+K)">⌘ คำสั่ง</button>
+<span class="chip net on" id="net">● ออนไลน์</span>
+</div>
+</div>
+
+<!-- ACCOUNT -->
+<div class="card">
+<b>👤 บัญชีผู้ใช้</b>
+<div class="row" style="margin-top:8px">
+<input type="email" id="em" placeholder="อีเมลของคุณ">
+<button id="login">สมัคร / เข้าสู่ระบบ</button>
+<button class="g" id="logout" style="display:none">ออกจากระบบ</button>
+</div>
+<div class="msg" id="acc">ยังไม่ได้เข้าสู่ระบบ</div>
+</div>
+
+<!-- PROFILE -->
+<div class="card" id="prof">
+<div class="row" style="justify-content:space-between"><b>🪪 โปรไฟล์</b><span class="msg" id="pJoin"></span></div>
+<div id="profHint" class="msg" style="margin-top:6px">เข้าสู่ระบบเพื่อใช้โปรไฟล์ เลเวล สถิติ และเหรียญตรา</div>
+<div id="profBody" style="display:none">
+<div class="pf">
+<div class="av" id="pAv">😀</div>
+<div class="pfi">
+<input type="text" id="pName" maxlength="24" placeholder="ชื่อที่แสดง">
+<input type="text" id="pBio" maxlength="80" placeholder="แนะนำตัวสั้น ๆ">
+</div>
+</div>
+<div class="row" style="margin-top:10px;justify-content:space-between"><b id="pLv"></b><span class="msg" id="pXpT"></span></div>
+<div class="bar" style="margin-top:6px"><i id="pXp"></i></div>
+<div class="stats" id="pStats"></div>
+<div class="msg" style="margin-top:10px">อวตาร</div>
+<div class="row" id="pAvs"></div>
+<div class="msg" style="margin-top:8px">สีธีม</div>
+<div class="row" id="pAcc"></div>
+<div class="msg" style="margin-top:10px">เหรียญตรา <span id="pBc"></span></div>
+<div id="pBadges"></div>
+</div>
+</div>
+
+<!-- CPU TIERS -->
+<div class="grid" id="tiers"></div>
+
+<div class="card">
+<div class="row" style="justify-content:space-between">
+<b>🧠 CPU <span id="cpuName"></span></b>
+<span class="msg" id="cpuInfo"></span>
+</div>
+<div class="cpu" id="cpu"></div>
+</div>
+
+<!-- EDITOR -->
+<div class="card">
+<div class="row" style="justify-content:space-between">
+<b>📝 ที่วางโค้ด</b>
+<div class="row">
+<button class="g" id="sample">เกมตัวอย่าง</button>
+<button class="g" id="clear">ล้าง</button>
+</div>
+</div>
+
+<div class="row" style="margin-bottom:8px;gap:6px">
+<button class="g sm" id="edMinus" title="ลดขนาดตัวอักษร">A−</button>
+<button class="g sm" id="edPlus" title="เพิ่มขนาดตัวอักษร">A+</button>
+<button class="g sm" id="edWrap">↩ ตัดบรรทัด</button>
+<button class="g sm" id="edCopy">📋 คัดลอก</button>
+<button class="g sm" id="edPaste">📥 วาง</button>
+<button class="g sm" id="edFind">🔍 ค้นหา/แทนที่</button>
+</div>
+<div id="fndBar" class="row" style="display:none;margin-bottom:8px">
+<input type="text" id="fndq" placeholder="ค้นหา" style="flex:1">
+<input type="text" id="fndr" placeholder="แทนที่ด้วย" style="flex:1">
+<button class="g sm" id="fndNext">ถัดไป</button>
+<button class="g sm" id="fndGo">แทนที่ทั้งหมด</button>
+<span class="msg" id="fndMsg"></span>
+</div>
+<textarea id="code" spellcheck="false" placeholder="วาง HTML หรือ JavaScript (Tab = เยื้อง · Ctrl+Enter = รัน · Ctrl+S = บันทึกลงคลัง)"></textarea>
+<div class="msg" id="edst" style="margin-top:6px"></div>
+
+<div class="row" style="margin-top:10px">
+<label class="lbl">
+📎 เพิ่มไฟล์
+<input type="file" id="file" multiple hidden>
+</label>
+
+<label class="lbl">
+📦 แตก ZIP อัตโนมัติ
+<input type="file" id="zipFile" accept=".zip,application/zip" multiple hidden>
+</label>
+
+<button id="run">▶ ทดลองรันเกม</button>
+<button class="g" id="reset">รีเซ็ตโควตา</button>
+</div>
+
+<label class="chk">
+<input type="checkbox" id="optfull" checked>
+เปิดเกมเต็มหน้าทุกครั้งที่รัน
+</label>
+
+<div class="row" style="margin-top:8px;justify-content:space-between">
+<div class="msg" id="stack"></div>
+<button class="g sm" id="clrFiles">ล้างไฟล์ที่เลือก</button>
+</div>
+
+<!-- ZIP PROCESSOR -->
+<div class="card" style="margin-top:12px;background:var(--card2)">
+<div class="row" style="justify-content:space-between">
+<b>📦 ZIP Auto Processor</b>
+<span class="msg" id="zipCount">0 / 0 ไฟล์</span>
+</div>
+
+<div class="bar" style="margin-top:8px">
+<i id="zipBar"></i>
+</div>
+
+<div class="msg" id="zipStatus" style="margin-top:8px">
+รอเลือกไฟล์ ZIP
+</div>
+
+<div id="zipLog" class="msg" style="max-height:140px;overflow:auto;margin-top:8px"></div>
+</div>
+
+<div class="files" id="files"></div>
+<div class="msg">ไฟล์รูปและเสียงเรียกผ่าน FILES["ชื่อไฟล์"]</div>
+</div>
+
+<!-- SETTINGS -->
+<details class="card" id="sets">
+<summary><b>⚙️ ตั้งค่า &amp; ประสิทธิภาพ</b></summary>
+<label class="chk"><input type="checkbox" data-opt="live"> ♻️ Live Reload — โหลดเกมใหม่อัตโนมัติเมื่อแก้โค้ด (ไม่หักโควตา)</label>
+<label class="chk"><input type="checkbox" data-opt="pauseHidden"> ⏸ พักเกมอัตโนมัติเมื่อสลับแท็บ (ประหยัดแบต/CPU)</label>
+<label class="chk"><input type="checkbox" data-opt="lite"> 🪫 โหมดประหยัดแรง (ปิดแอนิเมชันและเอฟเฟกต์)</label>
+<label class="chk"><input type="checkbox" data-opt="zipFast"> ⚡ ZIP เร็ว (ไม่หน่วง 0.1 วินาทีต่อไฟล์)</label>
+<label class="chk"><input type="checkbox" data-opt="cons"> 🐞 แสดงคอนโซลเกม</label>
+</details>
+
+<!-- LIBRARY -->
+<div class="card lib" id="lib">
+<div class="row" style="justify-content:space-between">
+<b>📚 คลังเกมและไฟล์</b>
+<div class="row"><button class="g" id="exp">⬇ สำรอง</button><label class="lbl g">⬆ กู้คืน<input type="file" id="impb" accept=".json,application/json" hidden></label></div>
+</div>
+<div class="msg" id="libmsg">คลังในเครื่อง</div>
+<div class="bar" style="margin-top:6px"><i id="storb"></i></div>
+<div class="msg" id="stor"></div>
+<div class="row" style="margin-top:6px">
+<button class="g sm" id="persist">🔒 ขอเก็บถาวร</button>
+<button class="g sm" id="cleanf">🧹 ลบไฟล์ที่ไม่ได้ใช้</button>
+</div>
+<h4>เกมที่เคยรัน</h4>
+<div class="row"><input type="search" id="pq" placeholder="ค้นหาเกม">
+<select id="psort"><option value="new">ใหม่สุด</option><option value="name">ชื่อ ก-ฮ</option><option value="runs">รันบ่อยสุด</option></select></div>
+<div id="libp"></div>
+<h4>ไฟล์ที่เคยใช้</h4>
+<input type="search" id="fqi" placeholder="ค้นหาไฟล์" style="width:100%">
+<div id="libf"></div>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="card">
+<b>🖥️ หน้าจอเกม</b>
+<div class="stage" id="stage">
+<div class="tb">
+<button class="g" id="back">✕</button>
+<button class="g" id="rl" title="โหลดใหม่">⟳</button>
+<button class="g" id="pz" title="พัก/เล่นต่อ">⏸</button>
+<button class="g" id="stp" title="หยุดเกม">■</button>
+<button class="g" id="shot" title="จับภาพ">📸</button>
+<div class="url" id="url">bitlab://ยังไม่ได้เปิดเกม</div>
+<button class="g" id="fsb">⛶ เต็มจอ</button>
+</div>
+<div class="view">
+<iframe id="fr" sandbox="allow-scripts allow-pointer-lock" allow="fullscreen; autoplay; gamepad"></iframe>
+<div class="hud" id="hud">พร้อม</div>
+<div class="ov" id="ov">
+<div id="ovt"></div>
+<div class="big" id="ovn"></div>
+<div class="bar" style="width:70%">
+<i id="ovb"></i>
+</div>
+</div>
+</div>
+</div>
+<div class="msg" id="st"></div>
+<div class="msg" id="boost"></div>
+<div class="hist" id="hist"></div>
+</div>
+
+<!-- CONSOLE -->
+<div class="card" id="conCard">
+<div class="row" style="justify-content:space-between">
+<b>🐞 คอนโซลเกม <span class="msg" id="conN"></span></b>
+<div class="row">
+<label class="chk" style="margin:0"><input type="checkbox" id="conErr"> เฉพาะ error</label>
+<button class="g sm" id="conClr">ล้าง</button>
+</div>
+</div>
+<div id="con"></div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div class="drop" id="drop">📂 วางไฟล์หรือ ZIP เพื่อนำเข้า</div>
+<div class="pal" id="pal"><div class="pbox"><input type="text" id="pin" placeholder="พิมพ์คำสั่ง..."><div id="plist"></div></div></div>
+
+</div>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+const ZIP_DELAY = 100;
+
+const T = {
+ 32:{name:"32 บิต · ฟรี",wait:10000,runs:Infinity,files:2,threads:2,fps:30},
+ 64:{name:"64 บิต · จำกัด",wait:5000,runs:10,files:8,threads:8,fps:60},
+ 72:{name:"72 บิต · TURBO",wait:100,runs:1,files:Infinity,threads:72,fps:144},
+ 100:{name:"100 บิต · ULTRA",wait:50,runs:3,files:Infinity,threads:100,fps:240}
+};
+
+const ORDER = [32,64,72,100];
+
+function defOpt(){
+ return {full:true,live:false,pauseHidden:true,lite:false,zipFast:false,cons:true,wrap:true,fsz:13};
+}
+function defStats(){
+ return {runs:0,zips:0,added:0,playMs:0,errors:0,maxTier:32,saves:0};
+}
+function defProfile(){
+ return {name:"",bio:"",avatar:"😀",accent:"#7c5cff",xp:0,streak:0,lastDay:"",joined:Date.now(),badges:[]};
+}
+
+function fresh(){
+ return {
+  email:"",
+  tier:32,
+  code:"",
+  runs:{32:0,64:0,72:0,100:0},
+  hist:[],
+  files:[],
+  opt:defOpt(),
+  stats:defStats(),
+  profile:defProfile()
+ };
+}
+
+let S = fresh();
+let LIB = {files:[],projects:[]};
+let DB = null;
+let timer = null;
+let lastDoc = "";
+let zipBusy = false;
+let wakeLock = null;
+
+function esc(s){
+ return String(s).replace(/[&<>"]/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"
+ })[c]);
+}
+
+/* DATABASE */
+
+function openDB(){
+ if(DB) return Promise.resolve(DB);
+
+ return new Promise((resolve,reject)=>{
+  const req = indexedDB.open("bitlab",2);
+
+  req.onupgradeneeded = ()=>{
+   const db = req.result, tx = req.transaction;
+   ["files","projects"].forEach(n=>{
+    const st = db.objectStoreNames.contains(n)
+     ? tx.objectStore(n)
+     : db.createObjectStore(n,{keyPath:"id"});
+    if(!st.indexNames.contains("email"))
+     st.createIndex("email","email");
+   });
+  };
+
+  req.onsuccess = ()=>{
+   DB=req.result;
+   DB.onversionchange=()=>{DB.close();DB=null;};
+   resolve(DB);
+  };
+
+  req.onerror = ()=>reject(req.error);
+ });
+}
+
+function dbPut(store,obj){
+ return openDB().then(db=>new Promise(resolve=>{
+  const tx=db.transaction(store,"readwrite");
+  tx.objectStore(store).put(obj);
+  tx.oncomplete=resolve;
+  tx.onerror=resolve;
+ }));
+}
+
+function dbDel(store,id){
+ return openDB().then(db=>new Promise(resolve=>{
+  const tx=db.transaction(store,"readwrite");
+  tx.objectStore(store).delete(id);
+  tx.oncomplete=resolve;
+  tx.onerror=resolve;
+ }));
+}
+
+function dbAll(store){
+ return openDB().then(db=>new Promise((resolve,reject)=>{
+  const tx=db.transaction(store,"readonly");
+  const req=tx.objectStore(store).index("email").getAll(S.email);
+  req.onsuccess=()=>resolve(req.result.filter(x=>x.email===S.email));
+  req.onerror=()=>reject(req.error);
+ })).catch(()=>[]);
+}
+
+function refreshLib(){
+ if(!S.email){
+  LIB={files:[],projects:[]};
+  libUI();
+  return Promise.resolve();
+ }
+
+ return Promise.all([
+  dbAll("files"),
+  dbAll("projects")
+ ]).then(result=>{
+  LIB.files=result[0].sort((a,b)=>b.last-a.last);
+  LIB.projects=result[1].sort((a,b)=>b.time-a.time);
+  libUI();
+ });
+}
+
+function saveNow(){
+ if(!S.email)return;
+
+ const data=Object.assign({},S,{
+  files:S.files.map(f=>({
+   id:f.id,name:f.name,size:f.size
+  }))
+ });
+
+ try{
+  localStorage.setItem("bitlab:"+S.email,JSON.stringify(data));
+ }catch(e){
+  $("acc").textContent="พื้นที่เก็บข้อมูลไม่เพียงพอ";
+ }
+}
+
+function rememberFile(name,size,data){
+ const id=(S.email||"guest")+"|"+name+"|"+size;
+
+ let old=LIB.files.find(f=>f.id===id);
+
+ const entry=old||{
+  id,
+  email:S.email,
+  name,
+  size,
+  data,
+  added:Date.now(),
+  uses:0,
+  last:Date.now()
+ };
+
+ entry.data=data;
+ entry.last=Date.now();
+
+ if(S.email){
+  if(!old){LIB.files.unshift(entry);S.stats.added++;}
+  dbPut("files",entry).then(libUI);
+ }
+
+ return entry;
+}
+
+function addToStack(entry,ignoreLimit=false){
+ if(S.files.some(f=>f.id===entry.id))return true;
+
+ const limit=T[S.tier].files;
+
+ if(!ignoreLimit && S.files.length>=limit){
+  $("stack").textContent="ไฟล์เกินจำนวนที่ระดับนี้รองรับ";
+  return false;
+ }
+
+ S.files.push({
+  id:entry.id,
+  name:entry.name,
+  size:entry.size,
+  data:entry.data
+ });
+
+ filesUI();
+ save();
+ return true;
+}
+
+function hydrate(){
+ S.files=S.files.map(f=>{
+  if(f.data!=null)return f;
+  const found=LIB.files.find(x=>x.id===f.id);
+  return found?{
+   id:found.id,
+   name:found.name,
+   size:found.size,
+   data:found.data
+  }:null;
+ }).filter(Boolean);
+
+ filesUI();
+}
+
+function load(email){
+ flushSave();
+ let data=null;
+
+ try{
+  data=JSON.parse(localStorage.getItem("bitlab:"+email));
+ }catch(e){}
+
+ S=fresh();
+ S.email=email;
+
+ if(data){
+  S=Object.assign(S,data);
+  S.email=email;
+  if(!S.opt)S.opt={full:true};
+  if(!S.runs)S.runs={32:0,64:0,72:0,100:0};
+
+  $("acc").textContent="ยินดีต้อนรับกลับ "+email;
+ }else{
+  $("acc").textContent="สมัครสำเร็จ "+email;
+ }
+
+ normalize();
+ if(!S.profile.name)S.profile.name=email.split("@")[0].slice(0,24);
+ dailyLogin();
+
+ localStorage.setItem("bitlab:last",email);
+
+ $("em").value=email;
+ $("login").style.display="none";
+ $("logout").style.display="";
+
+ $("code").value=S.code||"";
+ $("optfull").checked=!!S.opt.full;
+ applyOpts();
+ syncOptsUI();
+ applyTheme();
+ profUI();
+
+ draw();
+
+ refreshLib().then(()=>{
+  hydrate();
+  save();
+ });
+}
+
+/* USER INTERFACE */
+
+function tiersUI(){
+ let html="";
+
+ ORDER.forEach(k=>{
+  const t=T[k];
+  const left=t.runs===Infinity
+   ?"∞"
+   :Math.max(0,t.runs-(S.runs[k]||0));
+
+  html+=`
+  <div class="tier ${S.tier===k?"on":""}" data-k="${k}">
+   <h3>${t.name}</h3>
+   <small>${t.threads} เธรด · ${t.fps} FPS</small>
+   <div>
+    <span class="tag">เหลือ ${left} ครั้ง</span>
+    <span class="tag">${t.files===Infinity?"ไฟล์ไม่จำกัด":t.files+" ไฟล์"}</span>
+   </div>
+  </div>`;
+ });
+
+ $("tiers").innerHTML=html;
+
+ document.querySelectorAll(".tier").forEach(el=>{
+  el.onclick=()=>{
+   S.tier=Number(el.dataset.k);
+   draw();
+   save();
+  };
+ });
+}
+
+function cpuUI(){
+ const t=T[S.tier];
+
+ $("cpuName").textContent=S.tier+" บิต";
+ $("cpuInfo").textContent=t.threads+" เธรด · "+t.fps+" FPS";
+
+ $("cpu").innerHTML=
+  Array.from({length:Math.min(t.threads,100)},()=>"<b></b>").join("");
+}
+
+function filesUINow(){
+ const t=T[S.tier];
+ const MAX=150;
+
+ $("files").innerHTML=S.files.slice(0,MAX).map((f,i)=>`
+  <div>
+   <span>${esc(f.name)} · ${(f.size/1024).toFixed(1)} KB</span>
+   <button class="g" data-i="${i}">ลบ</button>
+  </div>
+ `).join("")+(S.files.length>MAX
+  ?`<div class="msg">… และอีก ${S.files.length-MAX} ไฟล์ (ซ่อนไว้เพื่อให้เว็บลื่น)</div>`:"");
+
+ $("stack").textContent=
+  "ไฟล์ทั้งหมด "+S.files.length+" / "+
+  (t.files===Infinity?"ไม่จำกัด":t.files);
+}
+
+function histUI(){
+ $("hist").innerHTML=S.hist.slice(-20).reverse()
+  .map(x=>"<div>• "+esc(x)+"</div>").join("");
+}
+
+function draw(){
+ tiersUI();
+ cpuUI();
+ filesUI();
+ histUI();
+ libUI();
+
+ const t=T[S.tier];
+ const exhausted=t.runs!==Infinity &&
+  (S.runs[S.tier]||0)>=t.runs;
+
+ $("run").disabled=exhausted;
+ $("run").textContent=exhausted?"โควตาหมดแล้ว":"▶ ทดลองรันเกม";
+}
+
+/* LIBRARY EVENTS */
+
+/* LIBRARY EVENTS (see Pro modules) */
+
+/* ZIP PROCESSOR */
+
+function sleep(ms){
+ return new Promise(resolve=>setTimeout(resolve,ms));
+}
+
+function zipUI(done,total,status){
+ const percent=total?Math.round(done/total*100):0;
+
+ $("zipBar").style.width=percent+"%";
+ $("zipCount").textContent=done+" / "+total+" ไฟล์";
+ $("zipStatus").textContent=status;
+}
+
+function zipLog(text){
+ const line=document.createElement("div");
+ line.textContent=text;
+ $("zipLog").appendChild(line);
+ $("zipLog").scrollTop=$("zipLog").scrollHeight;
+}
+
+function mimeFor(ext){
+ const types={
+  png:"image/png",
+  jpg:"image/jpeg",
+  jpeg:"image/jpeg",
+  gif:"image/gif",
+  webp:"image/webp",
+  svg:"image/svg+xml",
+  mp3:"audio/mpeg",
+  wav:"audio/wav",
+  ogg:"audio/ogg",
+  mp4:"video/mp4",
+  webm:"video/webm",
+  json:"application/json",
+  pdf:"application/pdf"
+ };
+
+ return types[ext]||"application/octet-stream";
+}
+
+async function importZip(file){
+ if(zipBusy){
+  zipLog("กำลังประมวลผล ZIP อื่นอยู่");
+  return;
+ }
+
+ if(!(await ensureZip())){
+  $("zipStatus").textContent="ไม่สามารถโหลด JSZip ได้ กรุณาเชื่อมต่ออินเทอร์เน็ต";
+  return;
+ }
+
+ zipBusy=true;
+ $("zipLog").innerHTML="";
+ zipUI(0,0,"กำลังเปิด ZIP: "+file.name);
+
+ try{
+  const zip=await JSZip.loadAsync(file);
+  const entries=[];
+
+  zip.forEach((path,entry)=>{
+   if(entry.dir)return;
+   if(/(^|\/)__MACOSX(\/|$)/i.test(path))return;
+   if(/(^|\/)\.DS_Store$/i.test(path))return;
+   entries.push({path,entry});
+  });
+
+  entries.sort((a,b)=>
+   a.path.localeCompare(b.path,undefined,{
+    numeric:true,
+    sensitivity:"base"
+   })
+  );
+
+  if(entries.length>5000){
+   zipLog("ZIP มีเกิน 5000 ไฟล์ ตัดเหลือ 5000 ไฟล์แรกเพื่อกันเบราว์เซอร์ค้าง");
+   entries.length=5000;
+  }
+
+  zipUI(0,entries.length,"แตก ZIP สำเร็จ เริ่มอ่านไฟล์ทีละไฟล์");
+
+  let completed=0;
+
+  for(const item of entries){
+   const path=item.path;
+   const filename=path.split("/").pop();
+
+   const ext=filename.split(".").pop().toLowerCase();
+
+   const textFile=/^(js|css|html?|json|txt|xml|glsl|vert|frag|md)$/i.test(ext);
+
+   let data;
+
+   if(textFile){
+    data=await item.entry.async("string");
+   }else{
+    const base64=await item.entry.async("base64");
+    data="data:"+mimeFor(ext)+";base64,"+base64;
+   }
+
+   const size=data.length;
+   const entry=rememberFile(path,size,data);
+
+   /*
+    * ZIP นำเข้าได้ทุกไฟล์โดยไม่ติดโควตาไฟล์ปกติ
+    * โควตาการรันเกมยังคงใช้ตามระดับที่เลือก
+    */
+   addToStack(entry,true);
+
+   completed++;
+
+   zipUI(
+    completed,
+    entries.length,
+    "อ่านไฟล์ "+completed+"/"+entries.length+" : "+path
+   );
+
+   zipLog("✓ "+completed+". "+path);
+
+   // เว้นช่วง 0.1 วินาทีต่อไฟล์
+   if(zipDelay(completed))await sleep(zipDelay(completed));
+  }
+
+  save();
+
+  zipUI(
+   completed,
+   entries.length,
+   "เสร็จสิ้น! อ่านไฟล์ครบทุกไฟล์แล้ว"
+  );
+
+  $("st").textContent=
+   "ZIP สำเร็จ · อ่าน "+completed+" ไฟล์ · พร้อมรันเกม";
+
+  onZipDone(completed,file.name);
+
+ }catch(error){
+  console.error(error);
+  $("zipStatus").textContent="เกิดข้อผิดพลาด: "+error.message;
+  zipLog("✕ แตก ZIP ไม่สำเร็จ");
+ }finally{
+  zipBusy=false;
+ }
+}
+
+/* BUILD GAME */
+
+function build(){
+ return buildFrom($("code").value,S.files);
+}
+
+function buildFrom(codeIn,fileList){
+ let code=String(codeIn||"").trim();
+ let css="";
+ let html="";
+ let js=[];
+ let assets={};
+
+ fileList.forEach(f=>{
+  const name=f.name.toLowerCase();
+
+  if(/\.css$/.test(name)){
+   css+=f.data+"\n";
+  }
+  else if(/\.js$/.test(name)){
+   js.push({name:f.name,code:f.data});
+  }
+  else if(/\.html?$/.test(name)){
+   html+=f.data+"\n";
+  }
+  else{
+   assets[f.name]=f.data;
+  }
+ });
+
+ const isHTML=/^</.test(code);
+ const main=isHTML?code:"";
+ const mainJS=isHTML?"":code;
+
+ const base=`
+ <meta name="viewport" content="width=device-width,initial-scale=1">
+ <style>
+ html,body{
+  margin:0;
+  width:100%;
+  min-height:100%;
+  background:#0b0d17;
+  color:white;
+  font-family:sans-serif;
+ }
+ canvas{max-width:100%}
+ </style>`;
+
+ const assetScript=
+  "<script>window.FILES="+
+  JSON.stringify(assets).replace(/</g,"\\u003c")+
+  ";<\/script>";
+
+ let scripts="";
+
+ if(mainJS.trim()){
+  scripts+=
+   "<script>\n"+
+   mainJS.replace(/<\/script/gi,"<\\/script")+
+   "\n<\/script>";
+ }
+
+ /*
+  * แยก JS เป็น script ทีละไฟล์
+  * Browser จะประมวลผลตามลำดับที่ต่อไว้
+  */
+ js.forEach(file=>{
+  scripts+="\n<script>\n"+
+   "/* FILE: "+file.name.replace(/[<>]/g,"")+" */\n"+
+   file.code.replace(/<\/script/gi,"<\\/script")+
+   "\n<\/script>";
+ });
+
+ const injected="<style>"+css+"</style>"+html;
+
+ if(main){
+  return base+assetScript+injected+main+scripts;
+ }
+
+ return base+injected+assetScript+scripts;
+}
+
+/* PERFORMANCE */
+
+const BOOST={
+ 32:"โหมด 32 บิต · เป้าหมาย 30 FPS",
+ 64:"โหมด 64 บิต · เป้าหมาย 60 FPS",
+ 72:"โหมด TURBO · ประสิทธิภาพสูง",
+ 100:"โหมด ULTRA · ประสิทธิภาพสูงสุดตามอุปกรณ์"
+};
+
+function perf(tier){
+ const cap=T[tier].fps>=144?0:T[tier].fps;
+
+ const script=
+ `(function(){
+  var cap=${cap};
+  var raf=window.requestAnimationFrame.bind(window);
+  var last=0,n=0,paused=false,uid=0,dead={};
+  var iv=cap?1000/cap:0;
+  function P(m){try{parent.postMessage(m,"*")}catch(e){}}
+
+  window.requestAnimationFrame=function(cb){
+   var my=++uid;
+   raf(function loop(t){
+    if(dead[my]){delete dead[my];return;}
+    if(paused){raf(loop);return;}
+    if(cap&&t-last<iv-2){raf(loop);return;}
+    last=t;
+    n++;
+    cb(t);
+   });
+   return my;
+  };
+  window.cancelAnimationFrame=function(id){dead[id]=1;};
+
+  function fmt(a){
+   try{
+    if(typeof a==="string")return a;
+    if(a instanceof Error)return a.stack||a.message;
+    return JSON.stringify(a);
+   }catch(e){return String(a);}
+  }
+  ["log","info","warn","error"].forEach(function(k){
+   var o=console[k];
+   console[k]=function(){
+    var s=[].map.call(arguments,fmt).join(" ");
+    P({bitlabLog:[k,s.slice(0,500)]});
+    try{o.apply(console,arguments)}catch(e){}
+   };
+  });
+  addEventListener("error",function(e){
+   P({bitlabLog:["error",(e.message||"error")+(e.lineno?" (บรรทัด "+e.lineno+")":"")]});
+  });
+  addEventListener("unhandledrejection",function(e){
+   P({bitlabLog:["error","Promise: "+fmt(e.reason)]});
+  });
+
+  addEventListener("message",function(e){
+   var d=e.data;
+   if(!d||!d.bitlabCmd)return;
+   if(d.bitlabCmd==="pause")paused=true;
+   if(d.bitlabCmd==="resume")paused=false;
+   if(d.bitlabCmd==="shot"){
+    var c=document.querySelector("canvas");
+    try{P({bitlabShot:c?c.toDataURL("image/png"):null})}
+    catch(x){P({bitlabShot:null})}
+   }
+  });
+
+  setTimeout(function(){
+   var c=document.querySelector("canvas");
+   if(!c||!c.width)return;
+   try{
+    var w=160,h=Math.max(1,Math.round(c.height*w/c.width));
+    var t=document.createElement("canvas");
+    t.width=w;t.height=h;
+    t.getContext("2d").drawImage(c,0,0,w,h);
+    P({bitlabThumb:t.toDataURL("image/jpeg",.6)});
+   }catch(x){}
+  },1800);
+
+  var start=performance.now();
+
+  (function measure(){
+   var now=performance.now();
+
+   if(now-start>=1000){
+    P({bitlabFps:Math.round(n*1000/(now-start))});
+    n=0;
+    start=now;
+   }
+
+   raf(measure);
+  })();
+ })();`;
+
+ return "<script>"+script+"<\/script>";
+}
+
+function turbo(tier){
+ const stage=$("stage");
+
+ stage.classList.toggle("turbo",tier>=72);
+ stage.classList.toggle("t100",tier===100);
+
+ $("boost").textContent=BOOST[tier];
+
+ if(tier>=72&&navigator.wakeLock){
+  navigator.wakeLock.request("screen")
+   .then(lock=>wakeLock=lock)
+   .catch(()=>{});
+ }
+}
+
+window.addEventListener("message",e=>{
+ if(e.source!==$("fr").contentWindow)return;
+ const d=e.data;
+ if(!d||typeof d!=="object")return;
+
+ if(typeof d.bitlabFps==="number"){
+  if(userPaused){
+   $("hud").textContent="⏸ หยุดชั่วคราว";
+   $("hud").style.color="#fbbf24";
+   return;
+  }
+  const fps=d.bitlabFps;
+  $("hud").textContent=
+   S.tier+" บิต · "+fps+" FPS";
+  $("hud").style.color=
+   fps>=55?"#34d399":fps>=28?"#fbbf24":"#fb7185";
+
+  if(running&&!document.hidden){
+   S.stats.playMs+=1000;
+   if(S.stats.playMs%60000===0)addXP(2);
+   if(S.stats.playMs%10000===0){profUI();save();}
+  }
+ }
+ else if(Array.isArray(d.bitlabLog)){
+  const t=["log","info","warn","error"].includes(d.bitlabLog[0])?d.bitlabLog[0]:"log";
+  conAdd(t,d.bitlabLog[1]);
+ }
+ else if(typeof d.bitlabThumb==="string"){
+  if(!d.bitlabThumb.startsWith("data:image/jpeg;base64,")||d.bitlabThumb.length>60000)return;
+  const p=LIB.projects.find(x=>x.id===curProj);
+  if(p&&!p.thumb){
+   p.thumb=d.bitlabThumb;
+   dbPut("projects",p);
+   libUI();
+  }
+ }
+ else if("bitlabShot" in d){
+  if(typeof d.bitlabShot==="string"&&d.bitlabShot.startsWith("data:image/png;base64,")){
+   const a=document.createElement("a");
+   a.href=d.bitlabShot;
+   a.download="bitlab-shot-"+Date.now()+".png";
+   a.click();
+   toast("📸 บันทึกภาพแล้ว","ok");
+  }else{
+   toast("ไม่พบ canvas ในเกมนี้","bad");
+  }
+ }
+});
+
+/* RUN SCREEN */
+
+function overlay(on,text,number,percent){
+ $("ov").classList.toggle("on",on);
+
+ if(text!=null)$("ovt").textContent=text;
+ if(number!=null)$("ovn").textContent=number;
+ if(percent!=null)$("ovb").style.width=percent+"%";
+}
+
+function launch(){
+ conClear();
+ userPaused=false;
+ $("pz").textContent="⏸";
+ lastDoc=perf(S.tier)+build();
+ $("fr").srcdoc=lastDoc;
+}
+
+function snapshot(manual){
+ if(!S.email){curProj=null;return false;}
+
+ const titleMatch=S.code.match(/<title>([^<]{1,40})<\/title>/i);
+ const name=titleMatch?titleMatch[1]:"เกม BitLab";
+ const h=hashStr(S.code+"|"+S.files.map(f=>f.id).join(","));
+
+ let p=LIB.projects.find(x=>x.hash===h);
+ const existed=!!p;
+
+ if(p){
+  p.time=Date.now();
+  if(!manual)p.runs=(p.runs||0)+1;
+ }else{
+  p={
+   id:"p"+Date.now(),
+   email:S.email,
+   name,
+   code:S.code,
+   files:S.files.map(f=>f.id),
+   tier:S.tier,
+   time:Date.now(),
+   hash:h,
+   pin:false,
+   runs:manual?0:1,
+   thumb:""
+  };
+  LIB.projects.unshift(p);
+ }
+
+ curProj=p.id;
+ dbPut("projects",p);
+ pruneProjects();
+ libUI();
+ return existed;
+}
+
+function run(){
+ const tier=T[S.tier];
+
+ if(zipBusy){
+  $("st").textContent="กรุณารอให้ ZIP อ่านไฟล์ครบก่อน";
+  return;
+ }
+
+ if(tier.runs!==Infinity &&
+    (S.runs[S.tier]||0)>=tier.runs){
+  return;
+ }
+
+ const code=$("code").value;
+
+ if(!code.trim()&&!S.files.length){
+  $("st").textContent="กรุณาใส่โค้ดหรือไฟล์ก่อน";
+  return;
+ }
+
+ S.code=code;
+
+ if(timer)clearInterval(timer);
+
+ const delay=tier.wait;
+ const start=performance.now();
+
+ $("run").disabled=true;
+
+ if(S.opt.full)fs(true,false);
+
+ overlay(true,"กำลังเตรียมเกม",delay/1000+" s",0);
+
+ $("url").textContent="bitlab://กำลังเปิดเกม";
+
+ timer=setInterval(()=>{
+  const elapsed=performance.now()-start;
+  const left=Math.max(0,delay-elapsed);
+
+  overlay(
+   true,
+   "กำลังเตรียมเกม",
+   (left/1000).toFixed(2)+" s",
+   Math.min(100,elapsed/delay*100)
+  );
+
+  if(elapsed>=delay){
+   clearInterval(timer);
+   timer=null;
+
+   launch();
+   turbo(S.tier);
+   overlay(false);
+
+   S.runs[S.tier]=(S.runs[S.tier]||0)+1;
+
+   const time=((performance.now()-start)/1000).toFixed(2);
+
+   S.hist.push(
+    new Date().toLocaleString("th-TH")+
+    " · "+S.tier+" บิต · "+S.files.length+" ไฟล์"
+   );
+
+   $("url").textContent="bitlab://game/"+S.tier+"bit";
+
+   $("st").textContent=
+    "เปิดเกมสำเร็จ · "+time+" วินาที · "+S.files.length+" ไฟล์";
+
+   snapshot();
+   onRunSuccess();
+   draw();
+   save();
+  }
+ },10);
+}
+
+/* FULL SCREEN */
+
+function fs(on,api=true){
+ const stage=$("stage");
+
+ stage.classList.toggle("fs",on);
+ $("back").style.display=on?"":"none";
+ $("fsb").textContent=on?"⛶ ออกจากเต็มจอ":"⛶ เต็มจอ";
+
+ document.body.style.overflow=on?"hidden":"";
+
+ if(api){
+  if(on&&stage.requestFullscreen){
+   stage.requestFullscreen().catch(()=>{});
+  }
+  if(!on&&document.fullscreenElement){
+   document.exitFullscreen().catch(()=>{});
+  }
+ }
+}
+
+$("back").onclick=()=>fs(false);
+$("fsb").onclick=()=>fs(!$("stage").classList.contains("fs"));
+$("rl").onclick=()=>{if(lastDoc)$("fr").srcdoc=lastDoc};
+
+document.addEventListener("keydown",e=>{
+ if(e.key==="Escape")fs(false);
+});
+
+$("optfull").onchange=function(){
+ S.opt.full=this.checked;
+ save();
+};
+
+/* IMPORT NORMAL FILES */
+
+$("file").onchange=async function(e){
+ const files=Array.from(e.target.files||[]);
+ e.target.value="";
+ await importFiles(files);
+};
+
+/* IMPORT ZIP FILES */
+
+$("zipFile").onchange=async function(e){
+ const files=Array.from(e.target.files||[]);
+ e.target.value="";
+
+ for(const file of files){
+  await importZip(file);
+ }
+};
+
+/* ACCOUNT */
+
+$("login").onclick=()=>{
+ const email=$("em").value.trim().toLowerCase();
+
+ if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){
+  $("acc").textContent="อีเมลไม่ถูกต้อง";
+  return;
+ }
+
+ load(email);
+};
+
+$("logout").onclick=()=>{
+ clearTimeout(_st);
+ _st=null;
+ saveNow();
+
+ localStorage.removeItem("bitlab:last");
+
+ S=fresh();
+ LIB={files:[],projects:[]};
+
+ $("code").value="";
+ $("em").value="";
+ $("login").style.display="";
+ $("logout").style.display="none";
+
+ curProj=null;
+ normalize();
+ applyOpts();
+ applyTheme();
+ profUI();
+ edStat();
+ $("acc").textContent="ออกจากระบบแล้ว";
+ draw();
+};
+
+/* BUTTONS */
+
+$("run").onclick=run;
+
+$("reset").onclick=()=>{
+ S.runs={32:0,64:0,72:0,100:0};
+ draw();
+ save();
+};
+
+$("clear").onclick=()=>{
+ $("code").value="";
+ S.code="";
+ save();
+};
+
+$("code").oninput=onCodeInput;
+
+$("exp").onclick=()=>{
+ if(!S.email){
+  $("libmsg").textContent="เข้าสู่ระบบก่อนสำรองข้อมูล";
+  return;
+ }
+
+ const blob=new Blob([
+  JSON.stringify({
+   bitlab:1,
+   state:S,
+   files:LIB.files,
+   projects:LIB.projects
+  })
+ ],{type:"application/json"});
+
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");
+
+ a.href=url;
+ a.download="bitlab-backup.json";
+ a.click();
+
+ URL.revokeObjectURL(url);
+};
+
+/* SAMPLE GAME */
+
+$("sample").onclick=()=>{
+ $("code").value=`
+ <title>BitLab Catch Game</title>
+ <canvas id="game" width="480" height="300"></canvas>
+ <script>
+ const c=document.getElementById("game");
+ const ctx=c.getContext("2d");
+ let player=200;
+ let blocks=[];
+ let score=0;
+ let keys={};
+
+ onkeydown=e=>keys[e.key]=true;
+ onkeyup=e=>keys[e.key]=false;
+
+ c.onpointermove=e=>{
+  const r=c.getBoundingClientRect();
+  player=(e.clientX-r.left)*480/r.width-20;
+ };
+
+ setInterval(()=>{
+  blocks.push({x:Math.random()*460,y:0});
+ },500);
+
+ function loop(){
+  ctx.fillStyle="#101525";
+  ctx.fillRect(0,0,480,300);
+
+  if(keys.ArrowLeft)player-=5;
+  if(keys.ArrowRight)player+=5;
+
+  player=Math.max(0,Math.min(440,player));
+
+  ctx.fillStyle="#7c5cff";
+  ctx.fillRect(player,280,40,12);
+
+  ctx.fillStyle="#22d3ee";
+
+  blocks.forEach(b=>{
+   b.y+=3;
+   ctx.fillRect(b.x,b.y,14,14);
+
+   if(b.y>276&&b.x>player-14&&b.x<player+40){
+    b.y=999;
+    score++;
+   }
+  });
+
+  blocks=blocks.filter(b=>b.y<320);
+
+  ctx.fillStyle="white";
+  ctx.fillText("SCORE: "+score,10,20);
+
+  requestAnimationFrame(loop);
+ }
+
+ loop();
+ <\/script>
+ `;
+
+ S.code=$("code").value;
+ save();
+};
+
+/* =====================================================
+ * BitLab Pro Modules
+ * ===================================================== */
+
+var _st=null;
+let curProj=null,running=false,userPaused=false,liveT=null;
+let PQ="",PSORT="new",FQ="";
+
+/* ---------- helpers ---------- */
+
+function raf1(fn){
+ let p=false;
+ return function(){
+  if(p)return;
+  p=true;
+  requestAnimationFrame(()=>{p=false;fn();});
+ };
+}
+
+function toast(msg,type){
+ const box=$("toasts");
+ if(!box)return;
+ const d=document.createElement("div");
+ d.className="toast "+(type||"");
+ d.textContent=msg;
+ box.appendChild(d);
+ while(box.children.length>4)box.firstChild.remove();
+ setTimeout(()=>{
+  d.classList.add("out");
+  setTimeout(()=>d.remove(),300);
+ },2800);
+}
+
+function hashStr(s){
+ let h=2166136261;
+ for(let i=0;i<s.length;i++){
+  h^=s.charCodeAt(i);
+  h=Math.imul(h,16777619);
+ }
+ return (h>>>0).toString(36)+s.length;
+}
+
+function fmtDate(t){
+ return new Date(t).toLocaleString("th-TH",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+}
+
+function fmtSize(n){
+ return n>1048576?(n/1048576).toFixed(1)+" MB":(n/1024).toFixed(1)+" KB";
+}
+
+function safeName(s){
+ return String(s).replace(/[^\w\u0E00-\u0E7F\- ]+/g,"").trim().slice(0,40)||"game";
+}
+
+function dl(name,blob){
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");
+ a.href=url;
+ a.download=name;
+ a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+/* ---------- debounced save ---------- */
+
+function save(){
+ clearTimeout(_st);
+ _st=setTimeout(()=>{_st=null;saveNow();},350);
+}
+
+function flushSave(){
+ if(_st){
+  clearTimeout(_st);
+  _st=null;
+  saveNow();
+ }
+}
+
+addEventListener("pagehide",()=>{clearTimeout(_st);_st=null;saveNow();});
+document.addEventListener("visibilitychange",()=>{
+ if(document.hidden)flushSave();
+ if(S.opt.pauseHidden&&!userPaused&&running)postGame(document.hidden?"pause":"resume");
+});
+
+/* ---------- state normalize / options ---------- */
+
+function normalize(){
+ S.opt=Object.assign(defOpt(),S.opt||{});
+ S.stats=Object.assign(defStats(),S.stats||{});
+ S.profile=Object.assign(defProfile(),S.profile||{});
+ if(!Array.isArray(S.profile.badges))S.profile.badges=[];
+ if(!Array.isArray(S.hist))S.hist=[];
+ if(!S.runs)S.runs={32:0,64:0,72:0,100:0};
+}
+
+function applyOpts(){
+ document.documentElement.classList.toggle("lite",!!S.opt.lite);
+ const c=$("code");
+ c.style.fontSize=(S.opt.fsz||13)+"px";
+ c.wrap=S.opt.wrap===false?"off":"soft";
+ $("edWrap").textContent=S.opt.wrap===false?"↦ ไม่ตัดบรรทัด":"↩ ตัดบรรทัด";
+ $("conCard").style.display=S.opt.cons===false?"none":"";
+}
+
+function syncOptsUI(){
+ document.querySelectorAll("[data-opt]").forEach(el=>{
+  el.checked=!!S.opt[el.dataset.opt];
+ });
+}
+
+function toggleOpt(k){
+ S.opt[k]=!S.opt[k];
+ syncOptsUI();
+ applyOpts();
+ save();
+ toast((S.opt[k]?"เปิด ":"ปิด ")+k,"ok");
+}
+
+function applyTheme(){
+ document.documentElement.style.setProperty("--a",S.profile.accent||"#7c5cff");
+}
+
+function zipDelay(i){
+ if(!S.opt.zipFast)return ZIP_DELAY;
+ return i%15===0?1:0;
+}
+
+/* ---------- profile / XP / badges ---------- */
+
+const AVATARS=["😀","😎","🤖","👾","🦊","🐱","🐼","🦄","🐲","🚀","🎮","⚡"];
+const ACCENTS=["#7c5cff","#22d3ee","#f472b6","#34d399","#fbbf24","#fb7185"];
+const TITLES=["มือใหม่","นักทดลอง","นักเขียนโค้ด","แฮกเกอร์","เซียนเกม","ตำนาน BitLab"];
+
+const BADGES=[
+ {id:"run1",ic:"🚀",n:"เกมแรก",ok:()=>S.stats.runs>=1},
+ {id:"run10",ic:"🔥",n:"รัน 10 ครั้ง",ok:()=>S.stats.runs>=10},
+ {id:"run50",ic:"🏆",n:"รัน 50 ครั้ง",ok:()=>S.stats.runs>=50},
+ {id:"zip1",ic:"📦",n:"ZIP Master",ok:()=>S.stats.zips>=1},
+ {id:"files100",ic:"🗂️",n:"สะสมไฟล์ 100",ok:()=>S.stats.added>=100},
+ {id:"proj5",ic:"💾",n:"นักเซฟ 5 เกม",ok:()=>LIB.projects.length>=5},
+ {id:"turbo",ic:"⚡",n:"ใช้ TURBO",ok:()=>S.stats.maxTier>=72},
+ {id:"ultra",ic:"💎",n:"ใช้ ULTRA",ok:()=>S.stats.maxTier>=100},
+ {id:"st3",ic:"📅",n:"มา 3 วันติด",ok:()=>S.profile.streak>=3},
+ {id:"st7",ic:"🌟",n:"มา 7 วันติด",ok:()=>S.profile.streak>=7},
+ {id:"bug",ic:"🐞",n:"นักล่าบั๊ก",ok:()=>S.stats.errors>=5},
+ {id:"hour",ic:"⏱️",n:"เล่นครบ 1 ชม.",ok:()=>S.stats.playMs>=3600000},
+ {id:"lv5",ic:"🎖️",n:"เลเวล 5",ok:()=>levelInfo(S.profile.xp).lv>=5}
+];
+
+function levelInfo(xp){
+ const lv=Math.floor(Math.sqrt(xp/40))+1;
+ const base=40*(lv-1)*(lv-1);
+ const next=40*lv*lv;
+ return {lv,base,next,pct:Math.max(0,Math.min(100,Math.round((xp-base)/(next-base)*100)))};
+}
+
+function addXP(n){
+ const before=levelInfo(S.profile.xp).lv;
+ S.profile.xp+=n;
+ const after=levelInfo(S.profile.xp).lv;
+ if(after>before)toast("🎉 เลื่อนเป็นเลเวล "+after,"ok");
+}
+
+function checkBadges(){
+ BADGES.forEach(b=>{
+  if(!S.profile.badges.includes(b.id)&&b.ok()){
+   S.profile.badges.push(b.id);
+   toast("🏅 ปลดล็อก: "+b.n,"ok");
+  }
+ });
+}
+
+function dayKey(d){
+ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+
+function dailyLogin(){
+ const p=S.profile;
+ const today=dayKey(new Date());
+ if(p.lastDay===today)return;
+ const y=new Date();
+ y.setDate(y.getDate()-1);
+ p.streak=(p.lastDay===dayKey(y))?p.streak+1:1;
+ p.lastDay=today;
+ addXP(25);
+ checkBadges();
+ toast("📅 เช็คอินวันนี้ +25 XP · ต่อเนื่อง "+p.streak+" วัน","ok");
+}
+
+function profUINow(){
+ const p=S.profile;
+ const lg=!!S.email;
+ const li=levelInfo(p.xp);
+
+ $("profHint").style.display=lg?"none":"";
+ $("profBody").style.display=lg?"":"none";
+ $("chipLv").textContent=lg?(p.avatar+" "+(p.name||"").slice(0,10)+" · Lv."+li.lv):"👤 Guest";
+ if(!lg){$("pJoin").textContent="";return;}
+
+ $("pAv").textContent=p.avatar;
+ if(document.activeElement!==$("pName"))$("pName").value=p.name;
+ if(document.activeElement!==$("pBio"))$("pBio").value=p.bio;
+
+ $("pLv").textContent="Lv."+li.lv+" · "+TITLES[Math.min(TITLES.length-1,Math.floor((li.lv-1)/3))];
+ $("pXpT").textContent=p.xp+" / "+li.next+" XP · 🔥 "+p.streak+" วัน";
+ $("pXp").style.width=li.pct+"%";
+ $("pJoin").textContent="เข้าร่วม "+new Date(p.joined).toLocaleDateString("th-TH");
+
+ const mm=Math.floor(S.stats.playMs/60000);
+ const st=[
+  ["🎮",S.stats.runs,"รันเกม"],
+  ["⏱️",mm+" นาที","เวลาเล่น"],
+  ["📦",S.stats.zips,"ZIP"],
+  ["🗂️",LIB.files.length,"ไฟล์ในคลัง"],
+  ["💾",LIB.projects.length,"เกมในคลัง"],
+  ["🐞",S.stats.errors,"Error"]
+ ];
+ $("pStats").innerHTML=st.map(x=>`<div class="sb"><b>${x[0]} ${esc(x[1])}</b><span>${x[2]}</span></div>`).join("");
+
+ $("pAvs").innerHTML=AVATARS.map(a=>`<button class="em${a===p.avatar?" on":""}" data-av="${a}">${a}</button>`).join("");
+ $("pAcc").innerHTML=ACCENTS.map(c=>`<button class="sw${c===p.accent?" on":""}" data-ac="${c}" style="background:${c}" aria-label="สี ${c}"></button>`).join("");
+
+ const got=p.badges.length;
+ $("pBc").textContent="("+got+"/"+BADGES.length+")";
+ $("pBadges").innerHTML=BADGES.map(b=>`<span class="bdg${p.badges.includes(b.id)?"":" off"}">${b.ic} ${b.n}</span>`).join("");
+}
+const profUI=raf1(profUINow);
+
+/* ---------- library UI (projects + files) ---------- */
+
+function libUINow(){
+ if(!S.email){
+  $("libmsg").textContent="เข้าสู่ระบบเพื่อใช้คลังไฟล์";
+  $("libp").innerHTML="";
+  $("libf").innerHTML="";
+  return;
+ }
+
+ $("libmsg").textContent="มี "+LIB.projects.length+" เกม · "+LIB.files.length+" ไฟล์";
+
+ const q=PQ.trim().toLowerCase();
+ const ps=LIB.projects.filter(p=>!q||p.name.toLowerCase().includes(q));
+ ps.sort(PSORT==="name"
+  ?(a,b)=>a.name.localeCompare(b.name,"th")
+  :PSORT==="runs"
+   ?(a,b)=>(b.runs||0)-(a.runs||0)
+   :(a,b)=>b.time-a.time);
+ ps.sort((a,b)=>(b.pin?1:0)-(a.pin?1:0));
+
+ $("libp").innerHTML=ps.slice(0,60).map(p=>{
+  const th=(typeof p.thumb==="string"&&p.thumb.startsWith("data:image/"))
+   ?`<img src="${esc(p.thumb)}" alt="">`:"🎮";
+  const id=esc(p.id);
+  return `
+  <div class="pj">
+   <div class="th">${th}</div>
+   <div class="pi">
+    <b>${esc(p.name)}</b>${p.pin?" ⭐":""}
+    <small>${fmtDate(p.time)} · ${(p.files||[]).length} ไฟล์ · ${p.tier||32} บิต · รัน ${p.runs||0}</small>
+   </div>
+   <div class="pa">
+    <button data-act="open" data-id="${id}">เปิด</button>
+    <button class="g" data-act="pin" data-id="${id}" title="ปักหมุด">⭐</button>
+    <button class="g" data-act="ren" data-id="${id}" title="เปลี่ยนชื่อ">✏️</button>
+    <button class="g" data-act="dup" data-id="${id}" title="ทำสำเนา">📋</button>
+    <button class="g" data-act="exph" data-id="${id}" title="ส่งออก HTML">🌐</button>
+    <button class="g" data-act="expz" data-id="${id}" title="ส่งออก ZIP">📦</button>
+    <button class="g" data-act="del" data-id="${id}" title="ลบ">🗑</button>
+   </div>
+  </div>`;
+ }).join("")||'<div class="msg" style="margin-top:6px">ยังไม่มีเกมในคลัง</div>';
+
+ const fq=FQ.trim().toLowerCase();
+ const fs2=LIB.files.filter(f=>!fq||f.name.toLowerCase().includes(fq));
+ $("libf").innerHTML=fs2.slice(0,100).map(f=>`
+  <div class="it">
+   <span>${esc(f.name)} · ${fmtSize(f.size||0)}</span>
+   <span>
+    <button data-use="${esc(f.id)}">ใช้</button>
+    <button class="g" data-delfile="${esc(f.id)}">ลบ</button>
+   </span>
+  </div>`).join("")+(fs2.length>100?`<div class="msg">… อีก ${fs2.length-100} ไฟล์ (ใช้ช่องค้นหา)</div>`:"");
+
+ profUI();
+}
+const libUI=raf1(libUINow);
+const filesUI=raf1(filesUINow);
+
+function pruneProjects(){
+ const un=LIB.projects.filter(p=>!p.pin).sort((a,b)=>b.time-a.time);
+ un.slice(40).forEach(p=>{
+  LIB.projects=LIB.projects.filter(x=>x.id!==p.id);
+  dbDel("projects",p.id);
+ });
+}
+
+function projFiles(p){
+ return (p.files||[]).map(id=>LIB.files.find(f=>f.id===id)).filter(Boolean);
+}
+
+function standaloneHTML(p){
+ const body=buildFrom(p.code,projFiles(p));
+ return "<!DOCTYPE html><html lang=\"th\"><head><meta charset=\"utf-8\"><title>"+esc(p.name)+"</title></head><body>"+body+"</body></html>";
+}
+
+function exportHTML(p){
+ dl(safeName(p.name)+".html",new Blob([standaloneHTML(p)],{type:"text/html"}));
+ toast("ส่งออกเป็น HTML แล้ว","ok");
+}
+
+async function exportZip(p){
+ if(!(await ensureZip())){toast("ต้องออนไลน์เพื่อโหลด JSZip","bad");return;}
+ const z=new JSZip();
+ const files=projFiles(p);
+ z.file("index.html",standaloneHTML(p));
+ z.file("main-code.txt",p.code||"");
+ z.file("project.json",JSON.stringify({name:p.name,tier:p.tier,time:p.time,files:files.map(f=>f.name)},null,1));
+ files.forEach(f=>{
+  const n="assets/"+String(f.name).replace(/(^|\/)\.\.(?=\/|$)/g,"$1_");
+  if(typeof f.data==="string"&&f.data.startsWith("data:")){
+   z.file(n,f.data.slice(f.data.indexOf(",")+1),{base64:true});
+  }else{
+   z.file(n,f.data||"");
+  }
+ });
+ const blob=await z.generateAsync({type:"blob",compression:"DEFLATE"});
+ dl(safeName(p.name)+".zip",blob);
+ toast("ส่งออกเป็น ZIP แล้ว","ok");
+}
+
+function ensureZip(){
+ if(typeof JSZip!=="undefined")return Promise.resolve(true);
+ return new Promise(res=>{
+  const s=document.createElement("script");
+  s.src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+  s.onload=()=>res(typeof JSZip!=="undefined");
+  s.onerror=()=>res(false);
+  document.head.appendChild(s);
+ });
+}
+
+$("libp").onclick=e=>{
+ const btn=e.target.closest("button[data-act]");
+ if(!btn)return;
+ const p=LIB.projects.find(x=>x.id===btn.dataset.id);
+ if(!p)return;
+
+ switch(btn.dataset.act){
+  case "open":
+   S.code=p.code;
+   $("code").value=p.code;
+   S.files=[];
+   (p.files||[]).forEach(id=>{
+    const f=LIB.files.find(x=>x.id===id);
+    if(f)addToStack(f,true);
+   });
+   curProj=p.id;
+   save();
+   filesUI();
+   edStat();
+   toast("เปิด \""+p.name+"\" แล้ว","ok");
+   break;
+  case "pin":
+   p.pin=!p.pin;
+   dbPut("projects",p);
+   libUI();
+   break;
+  case "ren":{
+   const n=prompt("ชื่อเกมใหม่",p.name);
+   if(n&&n.trim()){
+    p.name=n.trim().slice(0,40);
+    dbPut("projects",p);
+    libUI();
+   }
+   break;
+  }
+  case "dup":{
+   const c=Object.assign({},p,{
+    id:"p"+Date.now(),
+    name:(p.name+" (สำเนา)").slice(0,40),
+    time:Date.now(),
+    hash:p.hash+"c"+Date.now(),
+    pin:false,
+    runs:0
+   });
+   LIB.projects.unshift(c);
+   dbPut("projects",c);
+   libUI();
+   toast("ทำสำเนาแล้ว","ok");
+   break;
+  }
+  case "exph":exportHTML(p);break;
+  case "expz":exportZip(p);break;
+  case "del":
+   if(confirm("ลบเกม \""+p.name+"\" ออกจากคลัง?")){
+    LIB.projects=LIB.projects.filter(x=>x.id!==p.id);
+    dbDel("projects",p.id);
+    libUI();
+   }
+   break;
+ }
+};
+
+$("libf").onclick=e=>{
+ const btn=e.target.closest("button");
+ if(!btn)return;
+
+ if(btn.dataset.use){
+  const f=LIB.files.find(x=>x.id===btn.dataset.use);
+  if(f)addToStack(f,true);
+ }
+
+ if(btn.dataset.delfile){
+  LIB.files=LIB.files.filter(x=>x.id!==btn.dataset.delfile);
+  dbDel("files",btn.dataset.delfile);
+  libUI();
+ }
+};
+
+$("files").onclick=e=>{
+ const b=e.target.closest("button[data-i]");
+ if(!b)return;
+ S.files.splice(Number(b.dataset.i),1);
+ filesUI();
+ save();
+};
+
+/* ---------- storage ---------- */
+
+function storageUI(){
+ if(!navigator.storage||!navigator.storage.estimate){
+  $("stor").textContent="เบราว์เซอร์นี้ไม่รองรับการตรวจพื้นที่เก็บข้อมูล";
+  return;
+ }
+ navigator.storage.estimate().then(r=>{
+  const u=r.usage||0,q=r.quota||1;
+  $("storb").style.width=Math.min(100,u/q*100)+"%";
+  $("stor").textContent="พื้นที่ที่ใช้ "+fmtSize(u)+" / "+fmtSize(q);
+ }).catch(()=>{});
+}
+
+/* ---------- backup import ---------- */
+
+async function importBackup(file){
+ if(!S.email){toast("เข้าสู่ระบบก่อนกู้คืนข้อมูล","bad");return;}
+ try{
+  const d=JSON.parse(await file.text());
+  if(!d||d.bitlab!==1)throw new Error("ไม่ใช่ไฟล์สำรอง BitLab");
+
+  const idMap={};
+  let nf=0,np=0;
+
+  (d.files||[]).forEach(f=>{
+   if(!f||!f.name)return;
+   const id=S.email+"|"+f.name+"|"+f.size;
+   idMap[f.id]=id;
+   const entry=Object.assign({},f,{id,email:S.email});
+   dbPut("files",entry);
+   nf++;
+  });
+
+  (d.projects||[]).forEach((p,i)=>{
+   if(!p||typeof p.code!=="string")return;
+   const np2=Object.assign({},p,{
+    id:"p"+Date.now()+"_"+i,
+    email:S.email,
+    files:(p.files||[]).map(x=>idMap[x]||x),
+    hash:(p.hash||hashStr(p.code))+"i"
+   });
+   dbPut("projects",np2);
+   np++;
+  });
+
+  if(d.state&&d.state.profile&&confirm("กู้โปรไฟล์และสถิติจากไฟล์สำรองด้วยหรือไม่?")){
+   S.profile=Object.assign(defProfile(),d.state.profile);
+   S.stats=Object.assign(defStats(),d.state.stats||{});
+   applyTheme();
+  }
+
+  await sleep(150);
+  await refreshLib();
+  checkBadges();
+  save();
+  toast("กู้คืน "+np+" เกม · "+nf+" ไฟล์","ok");
+ }catch(err){
+  toast("กู้คืนไม่สำเร็จ: "+err.message,"bad");
+ }
+}
+
+/* ---------- file import (buttons / drag-drop / paste) ---------- */
+
+async function importFiles(files){
+ let ok=0,over=0;
+ for(const file of files){
+  try{
+   const text=/\.(js|css|html?|json|txt)$/i.test(file.name);
+   let data;
+   if(text){
+    data=await file.text();
+   }else{
+    data=await new Promise((res,rej)=>{
+     const r=new FileReader();
+     r.onload=()=>res(r.result);
+     r.onerror=()=>rej(r.error);
+     r.readAsDataURL(file);
+    });
+   }
+   const entry=rememberFile(file.name,file.size,data);
+   if(addToStack(entry))ok++;else over++;
+  }catch(err){
+   toast("อ่านไฟล์ไม่ได้: "+file.name,"bad");
+  }
+ }
+ if(ok){addXP(2*ok);checkBadges();toast("เพิ่ม "+ok+" ไฟล์","ok");}
+ if(over)toast(over+" ไฟล์เกินโควตาของระดับนี้","bad");
+ profUI();
+}
+
+async function handleFiles(files){
+ const zips=files.filter(f=>/\.zip$/i.test(f.name));
+ const rest=files.filter(f=>!/\.zip$/i.test(f.name));
+ if(rest.length)await importFiles(rest);
+ for(const z of zips)await importZip(z);
+}
+
+function onZipDone(n,name){
+ S.stats.zips++;
+ addXP(20);
+ checkBadges();
+ profUI();
+ toast("📦 แตก "+name+" สำเร็จ "+n+" ไฟล์","ok");
+}
+
+/* ---------- run hooks ---------- */
+
+function onRunSuccess(){
+ running=true;
+ userPaused=false;
+ $("pz").textContent="⏸";
+ S.stats.runs++;
+ S.stats.maxTier=Math.max(S.stats.maxTier,S.tier);
+ if(S.hist.length>100)S.hist.splice(0,S.hist.length-100);
+ addXP(10);
+ checkBadges();
+ profUI();
+}
+
+function saveProjectManual(){
+ if(!S.email){toast("เข้าสู่ระบบก่อนบันทึกลงคลัง","bad");return;}
+ const code=$("code").value;
+ if(!code.trim()&&!S.files.length){toast("ยังไม่มีโค้ดหรือไฟล์ให้บันทึก","bad");return;}
+ S.code=code;
+ const existed=snapshot(true);
+ if(existed){
+  toast("มีเวอร์ชันนี้ในคลังอยู่แล้ว (อัปเดตเวลาให้แล้ว)");
+ }else{
+  S.stats.saves++;
+  addXP(3);
+  checkBadges();
+  toast("💾 บันทึกลงคลังแล้ว","ok");
+ }
+ save();
+}
+
+/* ---------- game controls ---------- */
+
+function postGame(cmd){
+ try{$("fr").contentWindow.postMessage({bitlabCmd:cmd},"*");}catch(e){}
+}
+
+$("pz").onclick=()=>{
+ if(!running)return;
+ userPaused=!userPaused;
+ postGame(userPaused?"pause":"resume");
+ $("pz").textContent=userPaused?"▶":"⏸";
+};
+
+$("stp").onclick=()=>{
+ $("fr").srcdoc="<!doctype html><body style='background:#000'>";
+ running=false;
+ userPaused=false;
+ $("pz").textContent="⏸";
+ $("hud").textContent="หยุดแล้ว";
+ $("hud").style.color="#9aa3d0";
+ $("url").textContent="bitlab://ยังไม่ได้เปิดเกม";
+};
+
+$("shot").onclick=()=>{
+ if(!running){toast("ยังไม่ได้เปิดเกม","bad");return;}
+ postGame("shot");
+};
+
+/* ---------- console ---------- */
+
+let conBuf=[],conErrN=0,conTotal=0;
+
+function conAdd(type,text){
+ if(S.opt.cons===false&&type!=="error")return;
+ conBuf.push([type,String(text).slice(0,500)]);
+ if(conBuf.length>200)conBuf.shift();
+ if(type==="error"){
+  S.stats.errors++;
+  if(conErrN===0)toast("🐞 พบ error ในเกม ดูที่คอนโซลด้านล่าง","bad");
+  conErrN++;
+ }
+ conFlush();
+}
+
+const conFlush=raf1(()=>{
+ const box=$("con");
+ const t=new Date().toLocaleTimeString("th-TH");
+ const frag=document.createDocumentFragment();
+ conBuf.forEach(x=>{
+  const d=document.createElement("div");
+  d.className="l "+x[0];
+  d.textContent="["+t+"] "+x[1];
+  frag.appendChild(d);
+  conTotal++;
+ });
+ conBuf=[];
+ box.appendChild(frag);
+ while(box.children.length>300)box.firstChild.remove();
+ box.scrollTop=box.scrollHeight;
+ $("conN").textContent="("+conTotal+" บรรทัด · "+conErrN+" error)";
+});
+
+function conClear(){
+ conBuf=[];
+ conErrN=0;
+ conTotal=0;
+ $("con").innerHTML="";
+ $("conN").textContent="";
+}
+
+$("conClr").onclick=conClear;
+$("conErr").onchange=function(){
+ $("con").classList.toggle("errOnly",this.checked);
+};
+
+/* ---------- editor ---------- */
+
+const edStat=raf1(()=>{
+ const v=$("code").value;
+ const lines=v?v.split("\n").length:0;
+ $("edst").textContent="บรรทัด "+lines+" · "+v.length.toLocaleString()+" ตัวอักษร";
+});
+
+function onCodeInput(){
+ S.code=$("code").value;
+ save();
+ edStat();
+ if(S.opt.live&&lastDoc&&!timer&&!$("ov").classList.contains("on")){
+  clearTimeout(liveT);
+  liveT=setTimeout(()=>{launch();},900);
+ }
+}
+
+$("code").addEventListener("keydown",e=>{
+ if(e.key==="Tab"&&!e.shiftKey&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
+  e.preventDefault();
+  const t=e.target;
+  t.setRangeText("  ",t.selectionStart,t.selectionEnd,"end");
+  onCodeInput();
+ }
+});
+
+$("edMinus").onclick=()=>{S.opt.fsz=Math.max(10,(S.opt.fsz||13)-1);applyOpts();save();};
+$("edPlus").onclick=()=>{S.opt.fsz=Math.min(22,(S.opt.fsz||13)+1);applyOpts();save();};
+$("edWrap").onclick=()=>{S.opt.wrap=S.opt.wrap===false;applyOpts();save();};
+
+$("edCopy").onclick=()=>{
+ const v=$("code").value;
+ if(!v){toast("ยังไม่มีโค้ด");return;}
+ navigator.clipboard.writeText(v)
+  .then(()=>toast("คัดลอกโค้ดแล้ว","ok"))
+  .catch(()=>toast("คัดลอกไม่ได้ (เบราว์เซอร์ไม่อนุญาต)","bad"));
+};
+
+$("edPaste").onclick=()=>{
+ navigator.clipboard.readText().then(t=>{
+  const c=$("code");
+  c.setRangeText(t,c.selectionStart,c.selectionEnd,"end");
+  onCodeInput();
+ }).catch(()=>toast("วางไม่ได้ ลองกดค้างที่ช่องโค้ดแล้ววาง","bad"));
+};
+
+$("edFind").onclick=()=>{
+ const b=$("fndBar");
+ b.style.display=b.style.display==="none"?"flex":"none";
+ if(b.style.display!=="none")$("fndq").focus();
+};
+
+$("fndNext").onclick=()=>{
+ const q=$("fndq").value,c=$("code");
+ if(!q)return;
+ let i=c.value.indexOf(q,c.selectionEnd);
+ if(i<0)i=c.value.indexOf(q);
+ if(i<0){$("fndMsg").textContent="ไม่พบ";return;}
+ c.focus();
+ c.setSelectionRange(i,i+q.length);
+ $("fndMsg").textContent="";
+};
+
+$("fndGo").onclick=()=>{
+ const q=$("fndq").value,c=$("code");
+ if(!q)return;
+ const parts=c.value.split(q);
+ const n=parts.length-1;
+ if(!n){$("fndMsg").textContent="ไม่พบ";return;}
+ c.value=parts.join($("fndr").value);
+ onCodeInput();
+ $("fndMsg").textContent="แทนที่ "+n+" จุด";
+};
+
+$("clrFiles").onclick=()=>{
+ if(!S.files.length)return;
+ S.files=[];
+ filesUI();
+ save();
+};
+
+(function(){
+ const s=$("sample").onclick,c=$("clear").onclick;
+ $("sample").onclick=function(){s();edStat();};
+ $("clear").onclick=function(){c();edStat();};
+})();
+
+/* ---------- command palette ---------- */
+
+const ACTIONS=[
+ {t:"▶ รันเกม",k:"Ctrl+Enter",f:()=>$("run").click()},
+ {t:"💾 บันทึกเกมลงคลัง",k:"Ctrl+S",f:saveProjectManual},
+ {t:"⛶ สลับเต็มจอ",f:()=>$("fsb").click()},
+ {t:"■ หยุดเกม",f:()=>$("stp").click()},
+ {t:"⏸ พัก / เล่นต่อ",f:()=>$("pz").click()},
+ {t:"📸 จับภาพหน้าจอเกม",f:()=>$("shot").click()},
+ {t:"🧹 ล้างคอนโซล",f:conClear},
+ {t:"🎮 ใส่เกมตัวอย่าง",f:()=>$("sample").click()},
+ {t:"🗑 ล้างโค้ด",f:()=>$("clear").click()},
+ {t:"🔍 ค้นหา / แทนที่ในโค้ด",f:()=>$("edFind").click()},
+ {t:"⬇ สำรองข้อมูล",f:()=>$("exp").click()},
+ {t:"🪫 สลับโหมดประหยัดแรง",f:()=>toggleOpt("lite")},
+ {t:"♻️ สลับ Live Reload",f:()=>toggleOpt("live")},
+ {t:"🪪 ไปที่โปรไฟล์",f:()=>$("prof").scrollIntoView({behavior:"smooth"})},
+ {t:"📚 ไปที่คลังเกม",f:()=>$("lib").scrollIntoView({behavior:"smooth"})}
+];
+let palSel=0,palList=[];
+
+function palRender(){
+ const q=$("pin").value.trim().toLowerCase();
+ palList=ACTIONS.filter(a=>a.t.toLowerCase().includes(q));
+ palSel=Math.min(palSel,Math.max(0,palList.length-1));
+ $("plist").innerHTML=palList.map((a,i)=>
+  `<div class="pit${i===palSel?" sel":""}" data-i="${i}"><span>${esc(a.t)}</span><small class="msg">${a.k||""}</small></div>`
+ ).join("")||'<div class="msg" style="padding:8px">ไม่พบคำสั่ง</div>';
+}
+
+function palToggle(on){
+ const el=$("pal");
+ const open=on===undefined?!el.classList.contains("on"):on;
+ el.classList.toggle("on",open);
+ if(open){
+  $("pin").value="";
+  palSel=0;
+  palRender();
+  setTimeout(()=>$("pin").focus(),0);
+ }
+}
+
+function palRun(i){
+ const a=palList[i];
+ if(!a)return;
+ palToggle(false);
+ setTimeout(a.f,0);
+}
+
+$("pin").oninput=()=>{palSel=0;palRender();};
+$("pin").onkeydown=e=>{
+ if(e.key==="ArrowDown"){e.preventDefault();palSel=Math.min(palList.length-1,palSel+1);palRender();}
+ else if(e.key==="ArrowUp"){e.preventDefault();palSel=Math.max(0,palSel-1);palRender();}
+ else if(e.key==="Enter"){e.preventDefault();palRun(palSel);}
+ else if(e.key==="Escape"){palToggle(false);}
+};
+$("plist").onclick=e=>{
+ const it=e.target.closest(".pit");
+ if(it)palRun(Number(it.dataset.i));
+};
+$("pal").onclick=e=>{if(e.target===$("pal"))palToggle(false);};
+$("kbtn").onclick=()=>palToggle();
+
+document.addEventListener("keydown",e=>{
+ const mod=e.ctrlKey||e.metaKey;
+ const k=(e.key||"").toLowerCase();
+ if(mod&&k==="enter"){e.preventDefault();$("run").click();}
+ else if(mod&&k==="s"){e.preventDefault();saveProjectManual();}
+ else if(mod&&k==="k"){e.preventDefault();palToggle();}
+});
+
+/* ---------- drag & drop / paste ---------- */
+
+let dragN=0;
+function hasFiles(e){
+ return e.dataTransfer&&Array.from(e.dataTransfer.types||[]).includes("Files");
+}
+addEventListener("dragenter",e=>{
+ if(hasFiles(e)){dragN++;$("drop").classList.add("on");}
+});
+addEventListener("dragleave",e=>{
+ if(!hasFiles(e))return;
+ dragN=Math.max(0,dragN-1);
+ if(!dragN)$("drop").classList.remove("on");
+});
+addEventListener("dragover",e=>{if(hasFiles(e))e.preventDefault();});
+addEventListener("drop",e=>{
+ if(!hasFiles(e))return;
+ e.preventDefault();
+ dragN=0;
+ $("drop").classList.remove("on");
+ handleFiles(Array.from(e.dataTransfer.files||[]));
+});
+addEventListener("paste",e=>{
+ const f=e.clipboardData&&e.clipboardData.files;
+ if(f&&f.length){
+  e.preventDefault();
+  handleFiles(Array.from(f));
+ }
+});
+
+/* ---------- network ---------- */
+
+function netUI(){
+ const n=$("net");
+ n.textContent=navigator.onLine?"● ออนไลน์":"● ออฟไลน์";
+ n.classList.toggle("on",navigator.onLine);
+}
+addEventListener("online",()=>{netUI();toast("กลับมาออนไลน์แล้ว","ok");});
+addEventListener("offline",()=>{netUI();toast("ออฟไลน์ — ZIP อาจใช้ไม่ได้ถ้ายังไม่โหลดไลบรารี","bad");});
+
+/* ---------- init ---------- */
+
+function initUI(){
+ $("back").style.display="none";
+
+ $("prof").addEventListener("click",e=>{
+  const b=e.target.closest("button");
+  if(!b)return;
+  if(b.dataset.av){S.profile.avatar=b.dataset.av;}
+  else if(b.dataset.ac){S.profile.accent=b.dataset.ac;applyTheme();}
+  else return;
+  profUI();
+  save();
+ });
+ $("pName").oninput=()=>{S.profile.name=$("pName").value.slice(0,24);save();profUI();};
+ $("pBio").oninput=()=>{S.profile.bio=$("pBio").value.slice(0,80);save();};
+ $("chipLv").onclick=()=>$("prof").scrollIntoView({behavior:"smooth"});
+
+ $("pq").oninput=e=>{PQ=e.target.value;libUI();};
+ $("psort").onchange=e=>{PSORT=e.target.value;libUI();};
+ $("fqi").oninput=e=>{FQ=e.target.value;libUI();};
+
+ $("persist").onclick=()=>{
+  if(!navigator.storage||!navigator.storage.persist){toast("เบราว์เซอร์ไม่รองรับ","bad");return;}
+  navigator.storage.persist().then(ok=>toast(ok?"ขอเก็บข้อมูลถาวรสำเร็จ":"เบราว์เซอร์ไม่อนุญาต",ok?"ok":"bad"));
+ };
+
+ $("cleanf").onclick=()=>{
+  if(!S.email)return;
+  const used=new Set(S.files.map(f=>f.id));
+  LIB.projects.forEach(p=>(p.files||[]).forEach(id=>used.add(id)));
+  const un=LIB.files.filter(f=>!used.has(f.id));
+  if(!un.length){toast("ไม่มีไฟล์ที่ไม่ได้ใช้");return;}
+  if(!confirm("ลบไฟล์ที่ไม่ได้ผูกกับเกมใดเลย "+un.length+" ไฟล์?"))return;
+  un.forEach(f=>dbDel("files",f.id));
+  LIB.files=LIB.files.filter(f=>used.has(f.id));
+  libUI();
+  storageUI();
+  toast("ลบแล้ว "+un.length+" ไฟล์","ok");
+ };
+
+ $("impb").onchange=e=>{
+  const f=e.target.files&&e.target.files[0];
+  e.target.value="";
+  if(f)importBackup(f);
+ };
+
+ document.addEventListener("change",e=>{
+  const k=e.target.dataset&&e.target.dataset.opt;
+  if(!k)return;
+  S.opt[k]=e.target.checked;
+  applyOpts();
+  save();
+ });
+
+ $("em").addEventListener("keydown",e=>{
+  if(e.key==="Enter")$("login").click();
+ });
+
+ netUI();
+ applyOpts();
+ syncOptsUI();
+ applyTheme();
+ profUI();
+ edStat();
+ storageUI();
+ setInterval(storageUI,60000);
+}
+
+/* START */
+initUI();
+
+try{
+ const last=localStorage.getItem("bitlab:last");
+ if(last)load(last);
+ else draw();
+}catch(e){
+ draw();
+}
+
+</script>
+</body>
+</html>
